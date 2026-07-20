@@ -9,7 +9,7 @@ import os
 import pytest
 from unittest.mock import patch, MagicMock
 from dataclasses import asdict
-from signals import Signal
+from gtm_agent.signals import Signal
 
 
 # ---------------------------------------------------------------------------

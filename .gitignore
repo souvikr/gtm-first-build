@@ -1,6 +1,4 @@
 .venv/
 __pycache__/
 *.pyc
-review_queue.csv
-outcome_log.csv
 .env

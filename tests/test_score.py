@@ -1,5 +1,5 @@
 """
-tests/test_score.py — tests for score.py
+tests/test_score.py — tests for gtm_agent/score.py
 
 All OpenAI API calls are mocked — no real API key required.
 """
@@ -8,8 +8,8 @@ import pytest
 from unittest.mock import patch, MagicMock
 import openai
 
-import score as score_module
-from score import _parse_json, call_openai_with_retry, score_signal
+import gtm_agent.score as score_module
+from gtm_agent.score import _parse_json, call_openai_with_retry, score_signal
 
 
 # ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ class TestCallOpenAIWithRetry:
         mock_client.chat.completions.create.side_effect = [
             rate_limit_err, rate_limit_err, success_resp
         ]
-        with patch("score.time.sleep"):  # skip actual sleep
+        with patch("gtm_agent.score.time.sleep"):  # skip actual sleep
             result = call_openai_with_retry(
                 mock_client, "gpt-4o-mini",
                 [{"role": "user", "content": "hi"}]
@@ -85,7 +85,7 @@ class TestCallOpenAIWithRetry:
             "You exceeded your current quota", response=MagicMock(), body={}
         )
         mock_client.chat.completions.create.side_effect = quota_err
-        with patch("score.time.sleep"):
+        with patch("gtm_agent.score.time.sleep"):
             with pytest.raises(openai.RateLimitError):
                 call_openai_with_retry(
                     mock_client, "gpt-4o-mini",
@@ -99,7 +99,7 @@ class TestCallOpenAIWithRetry:
         mock_client = MagicMock()
         err = openai.RateLimitError("rate limited", response=MagicMock(), body={})
         mock_client.chat.completions.create.side_effect = err
-        with patch("score.time.sleep"):
+        with patch("gtm_agent.score.time.sleep"):
             with pytest.raises(openai.RateLimitError):
                 call_openai_with_retry(
                     mock_client, "gpt-4o-mini",
@@ -121,7 +121,7 @@ class TestScoreSignal:
         resp.choices = [choice]
         return resp
 
-    @patch("score.call_openai_with_retry")
+    @patch("gtm_agent.score.call_openai_with_retry")
     def test_returns_valid_score_dict(self, mock_retry, sample_signal):
         json_body = json.dumps({
             "score": 75, "tier": "warm",
@@ -134,7 +134,7 @@ class TestScoreSignal:
         assert "reason" in result
         assert "angle" in result
 
-    @patch("score.call_openai_with_retry")
+    @patch("gtm_agent.score.call_openai_with_retry")
     def test_low_score_for_consumer_app(self, mock_retry, cold_signal):
         json_body = json.dumps({
             "score": 5, "tier": "cold",
@@ -144,7 +144,7 @@ class TestScoreSignal:
         result = score_signal(cold_signal)
         assert result["score"] < 60
 
-    @patch("score.call_openai_with_retry")
+    @patch("gtm_agent.score.call_openai_with_retry")
     def test_returns_fallback_on_api_failure(self, mock_retry, sample_signal):
         """If the API call fails, returns fallback cold score."""
         mock_retry.side_effect = Exception("API is down")
@@ -153,14 +153,14 @@ class TestScoreSignal:
         assert result["tier"] == "cold"
         assert "api_failed" in result["reason"]
 
-    @patch("score.call_openai_with_retry")
+    @patch("gtm_agent.score.call_openai_with_retry")
     def test_returns_fallback_on_bad_json(self, mock_retry, sample_signal):
         """If the model returns non-JSON, returns fallback cold score."""
         mock_retry.return_value = self._make_openai_response("I cannot score this.")
         result = score_signal(sample_signal)
         assert result["score"] == 0
 
-    @patch("score.call_openai_with_retry")
+    @patch("gtm_agent.score.call_openai_with_retry")
     def test_prompt_includes_signal_fields(self, mock_retry, sample_signal):
         """Ensures the prompt passed to the API contains signal data."""
         json_body = json.dumps({
@@ -174,7 +174,7 @@ class TestScoreSignal:
         assert sample_signal.company in prompt
         assert sample_signal.trigger in prompt
 
-    @patch("score.call_openai_with_retry")
+    @patch("gtm_agent.score.call_openai_with_retry")
     def test_uses_json_object_response_format(self, mock_retry, sample_signal):
         """Ensures json_object mode is requested from the API."""
         mock_retry.return_value = self._make_openai_response(

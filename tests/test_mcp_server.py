@@ -56,7 +56,7 @@ class TestFetchSignals:
     @patch("mcp_server.fetch_hiring_gtm")
     @patch("mcp_server.fetch_show_hn")
     def test_hn_show_source_calls_fetch_show_hn(self, mock_show, mock_hiring):
-        from signals import Signal
+        from gtm_agent.signals import Signal
         mock_show.return_value = [
             Signal(source="hn_show", trigger="t", company="Co", context="c", url="u")
         ]
@@ -70,7 +70,7 @@ class TestFetchSignals:
     @patch("mcp_server.fetch_hiring_gtm")
     @patch("mcp_server.fetch_show_hn")
     def test_hn_hiring_source_calls_fetch_hiring_gtm(self, mock_show, mock_hiring):
-        from signals import Signal
+        from gtm_agent.signals import Signal
         mock_show.return_value = []
         mock_hiring.return_value = [
             Signal(source="hn_hiring", trigger="t", company="X", context="c", url="u")
@@ -83,7 +83,7 @@ class TestFetchSignals:
     @patch("mcp_server.fetch_hiring_gtm")
     @patch("mcp_server.fetch_show_hn")
     def test_both_sources_combined(self, mock_show, mock_hiring):
-        from signals import Signal
+        from gtm_agent.signals import Signal
         mock_show.return_value = [
             Signal(source="hn_show", trigger="t", company="A", context="c", url="u")
         ]
@@ -104,7 +104,7 @@ class TestFetchSignals:
     @patch("mcp_server.fetch_hiring_gtm")
     @patch("mcp_server.fetch_show_hn")
     def test_returns_dicts_not_signal_objects(self, mock_show, mock_hiring):
-        from signals import Signal
+        from gtm_agent.signals import Signal
         mock_show.return_value = [
             Signal(source="hn_show", trigger="t", company="Co", context="c", url="u")
         ]

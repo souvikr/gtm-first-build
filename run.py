@@ -12,9 +12,9 @@ That gate is the difference between a useful system and a spam cannon.
 import csv
 from dataclasses import asdict
 
-from signals import fetch_all
-from score import score_signal
-from draft import draft_message
+from gtm_agent.signals import fetch_all
+from gtm_agent.score import score_signal
+from gtm_agent.draft import draft_message
 
 MIN_SCORE = 60  # only draft for warm+ signals
 

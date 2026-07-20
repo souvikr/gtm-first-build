@@ -6,9 +6,9 @@ import re
 from datetime import datetime
 from dataclasses import asdict
 from mcp.server.fastmcp import FastMCP
-from signals import Signal, fetch_show_hn, fetch_hiring_gtm
-from score import score_signal
-from draft import draft_message as dm
+from gtm_agent.signals import Signal, fetch_show_hn, fetch_hiring_gtm
+from gtm_agent.score import score_signal
+from gtm_agent.draft import draft_message as dm
 
 # Configure logging to stderr so it doesn't interfere with the stdio transport
 logging.basicConfig(

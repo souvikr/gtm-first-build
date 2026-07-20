@@ -1,12 +1,12 @@
 """
-tests/test_signals.py — tests for signals.py
+tests/test_signals.py — tests for gtm_agent/signals.py
 
 Tests are fully offline (no real HTTP calls).
 The HN Algolia API is mocked via requests.
 """
 import pytest
 from unittest.mock import patch, MagicMock
-from signals import Signal, fetch_show_hn, fetch_hiring_gtm, fetch_all
+from gtm_agent.signals import Signal, fetch_show_hn, fetch_hiring_gtm, fetch_all
 
 
 # ---------------------------------------------------------------------------
@@ -87,27 +87,27 @@ class TestSignalDataclass:
 # ---------------------------------------------------------------------------
 
 class TestFetchShowHN:
-    @patch("signals.requests.get")
+    @patch("gtm_agent.signals.requests.get")
     def test_returns_list_of_signals(self, mock_get):
         mock_get.return_value = _hn_show_response()
         signals = fetch_show_hn(hours=24, max_items=10)
         assert isinstance(signals, list)
         assert len(signals) == 2
 
-    @patch("signals.requests.get")
+    @patch("gtm_agent.signals.requests.get")
     def test_signal_has_correct_source(self, mock_get):
         mock_get.return_value = _hn_show_response()
         signals = fetch_show_hn()
         for sig in signals:
             assert sig.source == "hn_show"
 
-    @patch("signals.requests.get")
+    @patch("gtm_agent.signals.requests.get")
     def test_signal_trigger_describes_show_hn(self, mock_get):
         mock_get.return_value = _hn_show_response()
         signals = fetch_show_hn()
         assert "Show HN" in signals[0].trigger
 
-    @patch("signals.requests.get")
+    @patch("gtm_agent.signals.requests.get")
     def test_missing_url_falls_back_to_hn_item_url(self, mock_get):
         """When a hit has no URL, the fallback is the HN item page."""
         mock_get.return_value = _hn_show_response()
@@ -115,14 +115,14 @@ class TestFetchShowHN:
         # Second item has url=None → should use HN item URL
         assert "news.ycombinator.com" in signals[1].url
 
-    @patch("signals.requests.get")
+    @patch("gtm_agent.signals.requests.get")
     def test_company_name_stripped_of_show_hn_prefix(self, mock_get):
         mock_get.return_value = _hn_show_response()
         signals = fetch_show_hn()
         # "Show HN:" prefix should be stripped
         assert not signals[0].company.startswith("Show HN")
 
-    @patch("signals.requests.get")
+    @patch("gtm_agent.signals.requests.get")
     def test_empty_hits_returns_empty_list(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.json.return_value = {"hits": []}
@@ -131,7 +131,7 @@ class TestFetchShowHN:
         signals = fetch_show_hn()
         assert signals == []
 
-    @patch("signals.requests.get")
+    @patch("gtm_agent.signals.requests.get")
     def test_correct_query_params_sent(self, mock_get):
         mock_get.return_value = _hn_show_response()
         fetch_show_hn(hours=48, max_items=5)
@@ -146,7 +146,7 @@ class TestFetchShowHN:
 # ---------------------------------------------------------------------------
 
 class TestFetchHiringGTM:
-    @patch("signals.requests.get")
+    @patch("gtm_agent.signals.requests.get")
     def test_returns_list_of_signals(self, mock_get):
         mock_get.return_value = _hn_hiring_response()
         signals = fetch_hiring_gtm(hours=72)
@@ -154,20 +154,20 @@ class TestFetchHiringGTM:
         # The empty-comment item should be filtered out
         assert len(signals) == 1
 
-    @patch("signals.requests.get")
+    @patch("gtm_agent.signals.requests.get")
     def test_signal_source_is_hn_hiring(self, mock_get):
         mock_get.return_value = _hn_hiring_response()
         signals = fetch_hiring_gtm()
         assert signals[0].source == "hn_hiring"
 
-    @patch("signals.requests.get")
+    @patch("gtm_agent.signals.requests.get")
     def test_empty_comments_are_skipped(self, mock_get):
         mock_get.return_value = _hn_hiring_response()
         signals = fetch_hiring_gtm()
         # Should only have 1 (the non-empty comment)
         assert len(signals) == 1
 
-    @patch("signals.requests.get")
+    @patch("gtm_agent.signals.requests.get")
     def test_context_truncated_to_500_chars(self, mock_get):
         long_text = "A" * 1000
         items = [{"comment_text": long_text, "objectID": "1"}]
@@ -181,8 +181,8 @@ class TestFetchHiringGTM:
 # ---------------------------------------------------------------------------
 
 class TestFetchAll:
-    @patch("signals.fetch_hiring_gtm")
-    @patch("signals.fetch_show_hn")
+    @patch("gtm_agent.signals.fetch_hiring_gtm")
+    @patch("gtm_agent.signals.fetch_show_hn")
     def test_combines_both_sources(self, mock_show, mock_hiring):
         mock_show.return_value = [
             Signal(source="hn_show", trigger="t", company="A", context="c", url="u")
@@ -193,8 +193,8 @@ class TestFetchAll:
         all_signals = fetch_all(hours=24)
         assert len(all_signals) == 2
 
-    @patch("signals.fetch_hiring_gtm")
-    @patch("signals.fetch_show_hn")
+    @patch("gtm_agent.signals.fetch_hiring_gtm")
+    @patch("gtm_agent.signals.fetch_show_hn")
     def test_returns_correct_types(self, mock_show, mock_hiring):
         mock_show.return_value = []
         mock_hiring.return_value = []

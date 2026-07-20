@@ -1,5 +1,5 @@
 """
-tests/test_draft.py — tests for draft.py
+tests/test_draft.py — tests for gtm_agent/draft.py
 
 All OpenAI API calls are mocked — no real API key required.
 """
@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import openai
 
-from draft import call_openai_with_retry, draft_message
+from gtm_agent.draft import call_openai_with_retry, draft_message
 
 
 # ---------------------------------------------------------------------------
@@ -39,7 +39,7 @@ class TestDraftCallOpenAIWithRetry:
         resp.choices = [choice]
         mock_client.chat.completions.create.side_effect = [rate_limit_err, resp]
 
-        with patch("draft.time.sleep"):
+        with patch("gtm_agent.draft.time.sleep"):
             result = call_openai_with_retry(mock_client, "gpt-4o", [{"role": "user", "content": "write"}])
         assert result.choices[0].message.content == "message after retry"
         assert mock_client.chat.completions.create.call_count == 2
@@ -49,7 +49,7 @@ class TestDraftCallOpenAIWithRetry:
         quota_err = openai.RateLimitError("You exceeded your current quota", response=MagicMock(), body={})
         mock_client.chat.completions.create.side_effect = quota_err
 
-        with patch("draft.time.sleep"):
+        with patch("gtm_agent.draft.time.sleep"):
             with pytest.raises(openai.RateLimitError):
                 call_openai_with_retry(mock_client, "gpt-4o", [{"role": "user", "content": "write"}])
         assert mock_client.chat.completions.create.call_count == 1
@@ -69,26 +69,26 @@ class TestDraftMessage:
         resp.choices = [choice]
         return resp
 
-    @patch("draft.call_openai_with_retry")
+    @patch("gtm_agent.draft.call_openai_with_retry")
     def test_returns_draft_string(self, mock_retry, sample_signal, warm_score):
         expected = "Hey, saw your launch on HN — great work on the CLI. Let's talk."
         mock_retry.return_value = self._make_openai_response(expected)
         result = draft_message(sample_signal, warm_score)
         assert result == expected
 
-    @patch("draft.call_openai_with_retry")
+    @patch("gtm_agent.draft.call_openai_with_retry")
     def test_draft_strips_whitespace(self, mock_retry, sample_signal, warm_score):
         mock_retry.return_value = self._make_openai_response("  trimmed message  ")
         result = draft_message(sample_signal, warm_score)
         assert result == "trimmed message"
 
-    @patch("draft.call_openai_with_retry")
+    @patch("gtm_agent.draft.call_openai_with_retry")
     def test_returns_empty_on_api_failure(self, mock_retry, sample_signal, warm_score):
         mock_retry.side_effect = Exception("API is down")
         result = draft_message(sample_signal, warm_score)
         assert result == ""
 
-    @patch("draft.call_openai_with_retry")
+    @patch("gtm_agent.draft.call_openai_with_retry")
     def test_prompt_includes_signal_context(self, mock_retry, sample_signal, warm_score):
         mock_retry.return_value = self._make_openai_response("a draft")
         draft_message(sample_signal, warm_score)
@@ -98,7 +98,7 @@ class TestDraftMessage:
         assert sample_signal.context in prompt
         assert sample_signal.url in prompt
 
-    @patch("draft.call_openai_with_retry")
+    @patch("gtm_agent.draft.call_openai_with_retry")
     def test_prompt_includes_score_angle(self, mock_retry, sample_signal, warm_score):
         mock_retry.return_value = self._make_openai_response("a draft")
         draft_message(sample_signal, warm_score)
@@ -107,7 +107,7 @@ class TestDraftMessage:
         prompt = messages[0]["content"]
         assert warm_score["angle"] in prompt
 
-    @patch("draft.call_openai_with_retry")
+    @patch("gtm_agent.draft.call_openai_with_retry")
     def test_score_with_missing_angle_is_handled(self, mock_retry, sample_signal):
         """score dict without 'angle' key should not raise."""
         mock_retry.return_value = self._make_openai_response("a draft")
@@ -115,10 +115,10 @@ class TestDraftMessage:
         result = draft_message(sample_signal, score_no_angle)
         assert result == "a draft"
 
-    @patch("draft.call_openai_with_retry")
+    @patch("gtm_agent.draft.call_openai_with_retry")
     def test_uses_gpt4o_model(self, mock_retry, sample_signal, warm_score):
         """Ensures we're using the higher-quality draft model."""
-        import draft as draft_module
+        import gtm_agent.draft as draft_module
         mock_retry.return_value = self._make_openai_response("a draft")
         draft_message(sample_signal, warm_score)
         call_args = mock_retry.call_args

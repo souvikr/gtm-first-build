@@ -3,7 +3,7 @@ tests/conftest.py — shared fixtures for all GTM pipeline tests.
 """
 import pytest
 from unittest.mock import MagicMock
-from signals import Signal
+from gtm_agent.signals import Signal
 
 
 @pytest.fixture
