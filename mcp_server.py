@@ -4,7 +4,11 @@ import csv
 import os
 import re
 from datetime import datetime
+from dataclasses import asdict
 from mcp.server.fastmcp import FastMCP
+from signals import Signal, fetch_show_hn, fetch_hiring_gtm
+from score import score_signal
+from draft import draft_message as dm
 
 # Configure logging to stderr so it doesn't interfere with the stdio transport
 logging.basicConfig(
@@ -28,9 +32,6 @@ def fetch_signals(sources: list[str], since_hours: int = 24) -> list[dict]:
         since_hours: How far back (in hours) to fetch signals. Default is 24.
     """
     logger.info(f"fetch_signals called with sources={sources}, since_hours={since_hours}")
-    from signals import fetch_show_hn, fetch_hiring_gtm
-    from dataclasses import asdict
-    
     results = []
     if "hn_show" in sources:
         logger.info("Fetching Show HN signals...")
@@ -52,9 +53,6 @@ def score_icp(signal: dict) -> dict:
         signal: A signal dictionary containing 'source', 'trigger', 'company', 'context', and 'url'.
     """
     logger.info(f"score_icp called for company: {signal.get('company')}")
-    from signals import Signal
-    from score import score_signal
-    
     sig = Signal(
         source=signal.get("source", ""),
         trigger=signal.get("trigger", ""),
@@ -63,7 +61,6 @@ def score_icp(signal: dict) -> dict:
         url=signal.get("url", ""),
         found_at=signal.get("found_at", datetime.utcnow().isoformat())
     )
-    
     score_result = score_signal(sig)
     logger.info(f"Scoring result for {sig.company}: {score_result}")
     return score_result
@@ -102,9 +99,6 @@ def draft_message(signal: dict, score: dict) -> str:
         score: The score dict returned by score_icp, containing 'angle', 'score', etc.
     """
     logger.info(f"draft_message called for company: {signal.get('company')}")
-    from signals import Signal
-    from draft import draft_message as dm
-    
     sig = Signal(
         source=signal.get("source", ""),
         trigger=signal.get("trigger", ""),
@@ -113,7 +107,6 @@ def draft_message(signal: dict, score: dict) -> str:
         url=signal.get("url", ""),
         found_at=signal.get("found_at", datetime.utcnow().isoformat())
     )
-    
     draft_content = dm(sig, score)
     logger.info(f"Generated draft for {sig.company}")
     return draft_content
