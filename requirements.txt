@@ -1,5 +1,6 @@
 openai
 requests>=2.31
 mcp
+python-dotenv
 pytest
 
