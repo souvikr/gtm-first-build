@@ -70,13 +70,27 @@ Instead of a fixed script, expose each capability as an **MCP tool** and let a C
 
 Expose these tools from an MCP server (Python MCP SDK):
 
-```
+```python
 fetch_signals(sources: list, since_hours: int) -> list[Signal]
 score_icp(signal: Signal)                       -> {score, tier, reason, angle}
 enrich_contact(company: str)                     -> {email, name, title, verified}
 draft_message(signal, score)                     -> str
 queue_for_review(record)                         -> ok        # human gate stays
 log_outcome(record, result)                      -> ok        # for v2
+```
+
+### Running the MCP Server
+Run the server locally with:
+```bash
+export OPENAI_API_KEY=sk-...
+python mcp_server.py
+```
+
+### Testing the Tools
+We provided a verification script to run all tools end-to-end:
+```bash
+export OPENAI_API_KEY=sk-...
+python test_mcp_tools.py
 ```
 
 Then the agent loop becomes a prompt, not a hardcoded pipeline:
@@ -87,7 +101,7 @@ Claude orchestrates: calls `fetch_signals`, loops `score_icp`, decides which cle
 
 **Why this is your moat**: a Clay-only operator builds tables. You build the connector Clay doesn't have, self-host the pipeline, and wrap it as tools an agent can drive. That "data engineer + agents + MCP" shape is exactly Scale Intelligence's forward-deployed engineer — and it's rare.
 
-**Orchestration**: for scheduling, you already know **Airflow** — a daily DAG (`fetch → score → enrich → draft → queue`) is a natural fit and a familiar-tech win. If you want a visual/low-code version to show non-technical clients, rebuild the same flow in **n8n** (self-hosted). Doing it in both is itself a great teardown post.
+**Orchestration**: for scheduling, you already know **Airflow** — a daily DAG (`fetch → score → enrich → draft → queue`) is a new fit and a familiar-tech win. If you want a visual/low-code version to show non-technical clients, rebuild the same flow in **n8n** (self-hosted). Doing it in both is itself a great teardown post.
 
 ---
 
