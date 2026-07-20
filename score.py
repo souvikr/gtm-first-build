@@ -9,6 +9,7 @@ import json
 import os
 import time
 import openai
+from openai import OpenAI
 client = OpenAI()
 
 # Edit this to define who you actually sell to.

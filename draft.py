@@ -8,6 +8,7 @@ NOTE: this DRAFTS only. Nothing is sent. A human reviews before anything goes ou
 import os
 import time
 import openai
+from openai import OpenAI
 client = OpenAI()
 
 DRAFT_MODEL = "gpt-4o"
